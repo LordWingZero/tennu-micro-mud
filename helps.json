@@ -1,0 +1,6 @@
+{
+    "createchar": [
+        "!createchar --name=\"<name>\" --race=<race> --class=<class>",
+        "`!races` or `!classes` for details."
+    ]
+}

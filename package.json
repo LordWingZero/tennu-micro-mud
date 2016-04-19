@@ -1,0 +1,32 @@
+{
+  "name": "tennu-micro-mud",
+  "version": "1.0.0",
+  "description": "A plugin for the tennu IRC framework, small IRC RPG.",
+  "main": "plugin.js",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "scripts": {
+    "test": "mocha",
+    "postversion": "git push && git push --tags && npm publish"
+  },
+  "author": "Victorio Berra",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.3.5",
+    "bookshelf": "^0.9.4",
+    "create-error": "^0.3.1",
+    "knex": "^0.10.0",
+    "later": "^1.2.0",
+    "lodash": "^4.11.1",
+    "rfr": "^1.2.3",
+    "sqlite": "0.0.4",
+    "yargs": "^4.6.0"
+  },
+  "devDependencies": {
+    "mocha": "^2.4.5",
+    "should": "^8.3.1"
+  },
+  "private": true
+}
