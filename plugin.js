@@ -7,7 +7,10 @@ var knexfile = require("./knexfile");
 // var parseDuration = require('parse-duration');
 var errors = require('./lib/errors');
 // var _ = require('lodash');
+
 var activityMonitor = require("./lib/activity-monitor");
+
+
 
 var errorReponse = function(message) {
     return {
@@ -25,7 +28,6 @@ var getConsoleLgger = function(logger) {
 
 var TennuMicroMUD = {
 
-    requiresRoles: ["dbcore", "dblogger"],
     //configDefaults: {},
     init: function(client, imports) {
 
@@ -38,6 +40,7 @@ var TennuMicroMUD = {
 
         // Database
         var databaseCtx = require("./lib/database-context")(knexfile);
+        var player = require("./lib/player")(databaseCtx);
 
         //var creator = require("./lib/creator");
 
@@ -57,43 +60,8 @@ var TennuMicroMUD = {
                 return errorReponse("Race and class required.");
             }
 
-            return Promise.try(function() {
-
-                    return new databaseCtx.models.Player({
-                        name: args.name
-                    }).fetch();
-
-                })
-                .then(function(foundPlayer) {
-
-                    if (foundPlayer !== null) {
-                        throw new errors.playerDataError("Player name in use.");
-                    }
-
-                    return new databaseCtx.models.Player({
-                        hostname: IRCMessage.hostmask.hostname,
-                        deleted: null
-                    }).fetch();
-
-                })
-                .then(function(foundPlayer) {
-
-                    if (foundPlayer !== null) {
-                        throw new errors.playerDataError("Player name in use.");
-                    }
-
-                    var playerRace = new databaseCtx.models.Race({
-                        name: args.race
-                    }).fetch({
-                        require: true
-                    });
-
-                    var playerClass = new databaseCtx.models.Class({
-                        name: args.class
-                    }).fetch({
-                        require: true
-                    });
-
+            return player.create(args.name, IRCMessage.hostmask.hostname, args.race, args.class)
+                .then(function(newPlayer) {
                     return {
                         intent: "say",
                         query: false,

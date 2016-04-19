@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "mocha",
+    "testwatch": "mocha --watch",
     "postversion": "git push && git push --tags && npm publish"
   },
   "author": "Victorio Berra",
