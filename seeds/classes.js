@@ -13,21 +13,21 @@ exports.seed = function(knex, Promise) {
     knex('classes').insert({
       name: 'Fighter'
     }),
-    knex('classes').insert({
-      name: 'Thief'
-    }),    
+    // knex('classes').insert({
+    //   name: 'Thief'
+    // }),    
     knex('classes').insert({
       name: 'Rogue'
-    }),
+    })
     // knex('classes').insert({
     //   name: 'Barbarian'
     // }),
     // knex('classes').insert({
     //   name: 'Paladin'
     // }),
-    knex('classes').insert({
-      name: 'Ranger'
-    })
+    // knex('classes').insert({
+    //   name: 'Ranger'
+    // })
     // knex('classes').insert({
     //   name: 'Monk'
     // }),

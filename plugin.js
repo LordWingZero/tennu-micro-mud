@@ -2,15 +2,16 @@
 var later = require("later");
 var Promise = require('bluebird');
 var format = require('util').format;
+var path = require('path');
 var knexfile = require("./knexfile");
 // var moment = require("moment");
 // var parseDuration = require('parse-duration');
+var collectionUtils = require("./lib/collection-utils");
 var errors = require('./lib/errors');
-// var _ = require('lodash');
+var _ = require('lodash');
+var nunjucks = require("nunjucks");
 
-var activityMonitor = require("./lib/activity-monitor");
-
-
+var viewPath = path.join(__dirname, "views");
 
 var errorReponse = function(message) {
     return {
@@ -38,9 +39,16 @@ var TennuMicroMUD = {
         const helps = require("./helps.json");
         var mudConfig = client.config("micro-mud");
 
+        // View engine
+        nunjucks.configure(viewPath, {
+            autoescape: false
+        });
+
         // Database
         var databaseCtx = require("./lib/database-context")(knexfile);
-        var player = require("./lib/player")(databaseCtx);
+        var player = require("./lib/player")(databaseCtx, consoleDebug);
+        var classes = require("./lib/classes")(databaseCtx);
+        var races = require("./lib/races")(databaseCtx);
 
         //var creator = require("./lib/creator");
 
@@ -50,6 +58,8 @@ var TennuMicroMUD = {
         // var experienceHarvesterTimer = later.setInterval(experienceHarvester.harvest, experienceHarvesterSchedule);
 
         function createchar(IRCMessage) {
+
+
             if (IRCMessage.hostmask.hostname.indexOf("gamesurge") === -1) {
                 return errorReponse("Please register with Gamesurge before doing that.");
             }
@@ -62,10 +72,14 @@ var TennuMicroMUD = {
 
             return player.create(args.name, IRCMessage.hostmask.hostname, args.race, args.class)
                 .then(function(newPlayer) {
+                    var createdView = nunjucks.render('created.nunjucks', {
+                        player: newPlayer.toJSON()
+                    });
+
                     return {
                         intent: "say",
                         query: false,
-                        message: format("A bold %s %s walks into Failgarth, proudly announcing their name \"%s\"!", args.race, args.class, args.name)
+                        message: createdView
                     };
                 })
                 .catch(databaseCtx.bookshelf.NotFoundError, function() {
@@ -76,14 +90,76 @@ var TennuMicroMUD = {
                 });
         }
 
+        function charstats(IRCMessage) {
+
+            var args = require('yargs').parse(IRCMessage.message);
+            var isName = args.name;
+
+            var foundPlayerPromise;
+
+            if (isName) {
+                foundPlayerPromise = player.getByName(args.name);
+            }
+            else {
+                foundPlayerPromise = player.getByHostname(IRCMessage.hostmask.hostname);
+            }
+
+            return foundPlayerPromise.then(function(foundPlayer) {
+                    var createdView = nunjucks.render('stats.nunjucks', {
+                        player: foundPlayer.toJSON()
+                    });
+
+                    return {
+                        intent: "say",
+                        query: false,
+                        message: createdView.split(/\n/)
+                    };
+                })
+                .catch(databaseCtx.bookshelf.NotFoundError, function() {
+                    return errorReponse(format("Couldnt find specified character for %s.", (isName ? args.name : IRCMessage.hostmask.hostname)))
+                })
+                .catch(function(err) {
+                    return errorReponse(err.message);
+                });
+
+        }
+
+        function listchars(IRCMessage) {
+            player.list();
+        }
+
+        function listraces(IRCMessage) {
+            return races.list().then(function(races) {
+                return {
+                    intent: "say",
+                    query: false,
+                    message: collectionUtils.reduceToListByProperty(races.toJSON(), 'name')
+                };
+            });
+        }
+
+        function listclasses(IRCMessage) {
+            return classes.list().then(function(classes) {
+                return {
+                    intent: "say",
+                    query: false,
+                    message: collectionUtils.reduceToListByProperty(classes.toJSON(), 'name')
+                };
+            });
+        }
+
         return {
             handlers: {
                 "privmsg": function(IRCMessage) {
                     if (IRCMessage.hostname) {
-                        activityMonitor.add(IRCMessage.hostname);
+                        //activityMonitor.add(IRCMessage.hostname);
                     }
                 },
-                "!createchar": createchar
+                "!createchar": createchar,
+                "!charstats": charstats,
+                "!listchars": listchars,
+                "!races": listraces,
+                "!classes": listclasses,
             },
             help: helps,
             commands: Object.keys(helps)

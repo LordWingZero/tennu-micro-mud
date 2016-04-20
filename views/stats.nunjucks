@@ -1,0 +1,4 @@
+(¯`·._.·(¯`·._.· Player: {{player.name}} | {{player.hostname}} ·._.·´¯)·._.·´¯)
+    Type   ->  Class: {{player.race.name}} | Race: {{player.class.name}}
+    State  ->  XP: {{ player.experience }} | HP: {{player.hitpoints}} | AC: {{player.armorclass}} | Speed: {{player.speed}} | PvP: {{ "enabled" if player.pvp else "disabled" }}
+    Stats  ->  STR: {{ player.strength }} | DEX: {{ player.dexterity }} | CON: {{ player.constitution }} | INT: {{ player.intellegence }} | WIS: {{ player.wisdom }} | CHR: {{ player.charisma }}
