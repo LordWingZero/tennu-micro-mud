@@ -43,7 +43,6 @@ describe('tennu-micro-mud', function() {
     var handlers = plugin.init(client).handlers;
 
     before(function(done) {
-        console.log("BEFORE")
         return Promise.join(
                 knex('players').del()
             )
@@ -90,6 +89,20 @@ describe('tennu-micro-mud', function() {
             };
 
             handlers["!charstats"](IRCMessage)
+                .then(function(response) {
+                    response.should.be.successResponse();
+                    done();
+                });
+        });
+
+        it('Should allow listing players.', function(done) {
+
+            var IRCMessage = {
+                hostmask: testUser.hostmask,
+                message: "!chars"
+            };
+
+            handlers["!chars"](IRCMessage)
                 .then(function(response) {
                     response.should.be.successResponse();
                     done();

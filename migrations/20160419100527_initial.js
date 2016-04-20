@@ -25,6 +25,7 @@ exports.up = function(knex, Promise) {
             return knex.schema.createTableIfNotExists("ircActivities", function(table) {
                 table.increments().primary();
                 table.string('hostname').notNullable().references('hostname').inTable('players');
+                table.dateTime('activeOn').notNullable();
                 table.timestamps();
             })
         })          

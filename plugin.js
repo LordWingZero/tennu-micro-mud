@@ -50,12 +50,11 @@ var TennuMicroMUD = {
         var classes = require("./lib/classes")(databaseCtx);
         var races = require("./lib/races")(databaseCtx);
 
-        //var creator = require("./lib/creator");
-
         // Schedules
-        // var experienceHarvesterSchedule = later.parse.recur().every(5).second(); //later.parse.recur().every(1).hour();
-        // var experienceHarvester = require("./lib/experience-harvester")(consoleDebug, activityMonitor, models);
-        // var experienceHarvesterTimer = later.setInterval(experienceHarvester.harvest, experienceHarvesterSchedule);
+        var activityMonitor = require("./lib/activity-monitor");
+        var scoreHarvesterSchedule = later.parse.recur().every(5).second(); //later.parse.recur().every(1).hour();
+        var scoreHarvester = require("./lib/experience-harvester")(consoleDebug, activityMonitor, databaseCtx);
+        var experienceHarvesterTimer = later.setInterval(scoreHarvester.harvest, scoreHarvesterSchedule);
 
         function createchar(IRCMessage) {
 
@@ -125,7 +124,13 @@ var TennuMicroMUD = {
         }
 
         function listchars(IRCMessage) {
-            player.list();
+            return player.list().then(function(players) {
+                return {
+                    intent: "say",
+                    query: false,
+                    message: format("Current characters: %s. !charstats [--name=\"<charname>\"] for more info.", collectionUtils.reduceToListByProperty(players.toJSON(), 'name'))
+                };
+            });            
         }
 
         function listraces(IRCMessage) {
@@ -133,7 +138,7 @@ var TennuMicroMUD = {
                 return {
                     intent: "say",
                     query: false,
-                    message: collectionUtils.reduceToListByProperty(races.toJSON(), 'name')
+                    message: "Races: " + collectionUtils.reduceToListByProperty(races.toJSON(), 'name')
                 };
             });
         }
@@ -143,7 +148,7 @@ var TennuMicroMUD = {
                 return {
                     intent: "say",
                     query: false,
-                    message: collectionUtils.reduceToListByProperty(classes.toJSON(), 'name')
+                    message: "Classes: " + collectionUtils.reduceToListByProperty(classes.toJSON(), 'name')
                 };
             });
         }
@@ -151,13 +156,13 @@ var TennuMicroMUD = {
         return {
             handlers: {
                 "privmsg": function(IRCMessage) {
-                    if (IRCMessage.hostname) {
-                        //activityMonitor.add(IRCMessage.hostname);
+                    if (IRCMessage.hostmask.hostname) {
+                        activityMonitor.add(IRCMessage.hostmask.hostname);
                     }
                 },
                 "!createchar": createchar,
                 "!charstats": charstats,
-                "!listchars": listchars,
+                "!chars": listchars,
                 "!races": listraces,
                 "!classes": listclasses,
             },
